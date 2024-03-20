@@ -561,8 +561,16 @@ async def stream_chat_request(request_body):
     history_metadata = request_body.get("history_metadata", {})
 
     async def generate():
-        async for completionChunk in response:
-            yield format_stream_response(completionChunk, history_metadata)
+        try:
+            async for completionChunk in response:
+                stream_response = format_stream_response(completionChunk, history_metadata)
+                if stream_response == {}:
+                    raise Exception('Empty message response.')
+                else:
+                    yield stream_response
+        except Exception as ex:
+            logging.exception(ex)
+            raise ex  
 
     return generate()
 
